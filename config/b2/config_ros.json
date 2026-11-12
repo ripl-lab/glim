@@ -25,6 +25,8 @@
   //
   // --- Extension modules ---
   // extension_modules      : List of extension modules to load
+  // map_publish_interval   : Minimum time between global map publications by the rviz viewer [s].
+  //                          The map is only published when it changes.
   //
   // --- Topics ---
   // imu_topic              : IMU topic
@@ -53,26 +55,29 @@
     // IMU config
     "imu_time_offset": 0.0,
     "points_time_offset": 0.0,
-    "acc_scale": 0.0, // Auto-detect if zero
+    "acc_scale": 1.0, // B2 IMU reports m/s^2
     "ang_scale": 1.0,
     // TF config
-    "imu_frame_id": "", // Auto-detect if blank
-    "lidar_frame_id": "", // Auto-detect if blank
-    "base_frame_id": "", // If blank, IMU frame ID is used
-    "odom_frame_id": "odom",
+    // The B2 tree odom -> base_link -> ... -> imu_link comes from b2_interfaces
+    // and the URDF. Using it as the base frame makes glim publish only
+    // map -> glim_odom -> odom on top of it.
+    "imu_frame_id": "imu_link", // URDF frame; the IMU topic says dog_imu_link
+    "lidar_frame_id": "rslidar",
+    "base_frame_id": "odom",
+    "odom_frame_id": "glim_odom",
     "map_frame_id": "map",
-    "publish_imu2lidar": true,
+    "publish_imu2lidar": false, // The URDF already provides imu_link -> rslidar
     "tf_time_offset": 1e-6,
     // Extension modules
     "extension_modules": [
-      "libmemory_monitor.so",
-      "libstandard_viewer.so",
+      // memory_monitor and standard_viewer are only built with the viewer
       "librviz_viewer.so"
       // "libimu_validator.so"
     ],
+    "map_publish_interval": 2.0,
     // Topics
-    "imu_topic": "/os_cloud_node/imu",
-    "points_topic": "/os_cloud_node/points",
+    "imu_topic": "/dog_imu_raw",
+    "points_topic": "/rslidar_points",
     "image_topic": "/image",
     // QoS options
     "imu_qos": {

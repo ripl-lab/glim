@@ -112,6 +112,12 @@ RUN set -eu; \
     ldconfig; \
     rm -rf /tmp/gtsam_points
 
+# unitree_ros2's message packages need the DDS IDL generator. A separate layer
+# so adding it doesn't rebuild the CUDA and gtsam_points layers above.
+RUN apt-get update \
+ && apt-get install -y --no-install-recommends ros-humble-rosidl-generator-dds-idl \
+ && rm -rf /var/lib/apt/lists/*
+
 ENV LANG=en_US.UTF-8 \
     DISABLE_AUTOUPDATER=1
 USER ${USERNAME}

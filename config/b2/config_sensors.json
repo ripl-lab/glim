@@ -53,10 +53,12 @@
     "imu_bias_noise_gyro": 1e-6,
     // LiDAR config
     "global_shutter_lidar": false,
+    // From b2_description.urdf: imu_link at the trunk origin, lidar_link at
+    // (0.34218, 0, 0.17851) with no rotation, and rslidar = lidar_link.
     "T_lidar_imu": [
-      0.006,
-      -0.012,
-      0.008,
+      -0.34218,
+      0.0,
+      -0.17851,
       0.0,
       0.0,
       0.0,
