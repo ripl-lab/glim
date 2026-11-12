@@ -93,6 +93,9 @@ if [[ -n $GPUS ]]; then ARGS+=(--gpus "$GPUS"); fi
 if ((HOST_NETWORK)); then
   # Keep ROS discovery on this machine so nothing reaches a robot.
   ARGS+=(--network host --ipc host -e ROS_LOCALHOST_ONLY=1 -e ROS_AUTOMATIC_DISCOVERY_RANGE=LOCALHOST)
+  # The host's /etc/hosts is copied in without our hostname; add it so sudo
+  # can resolve it.
+  ARGS+=(--add-host "$NAME:127.0.1.1")
   warn "using the host network; ROS discovery is limited to this machine"
 fi
 

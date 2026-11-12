@@ -74,7 +74,7 @@ RUN set -eu; \
 # ---------------------------------------------------------------------------
 
 # GLIM with GPU support, and the B2 packages. CUDA comes from NVIDIA's repo,
-# GTSAM and gtsam_points from koide3's PPA, so nothing uses the host's GTSAM.
+# GTSAM from koide3's PPA, so nothing uses the host's GTSAM.
 # rviz2 is only here so b2_interfaces' playback.launch.py resolves; with no
 # display in the container it exits, so run rviz on the host.
 RUN set -eu; \
@@ -89,14 +89,28 @@ RUN set -eu; \
       > /etc/apt/sources.list.d/koide3_ppa.list; \
     apt-get update; \
     apt-get install -y --no-install-recommends \
-      cuda-toolkit-13-1 libgtsam-points-cuda13.1-dev \
-      libboost-all-dev libfmt-dev libmetis-dev libomp-dev libspdlog-dev \
+      cuda-toolkit-13-1 libgtsam-notbb-dev \
+      libboost-all-dev libeigen3-dev libfmt-dev libmetis-dev libomp-dev libspdlog-dev \
       ros-humble-cv-bridge ros-humble-image-transport ros-humble-rclcpp-components \
       ros-humble-rmw-cyclonedds-cpp ros-humble-rviz2 ros-humble-xacro \
       python3-av python3-numpy; \
     rm -rf /var/lib/apt/lists/*
 ENV PATH=/usr/local/cuda/bin:${PATH} \
     NVIDIA_DRIVER_CAPABILITIES=compute,utility
+
+# glim (since #319) uses IndexedSlidingWindow::has_index, which is newer than
+# the PPA's gtsam_points 1.2.2, so build gtsam_points from source: v1.2.2 plus
+# that commit, with the PPA package's settings (CUDA, OpenMP, no TBB).
+ARG GTSAM_POINTS_COMMIT=8f50081cea2c5f133ccdda516109fa1d1e2b08e0
+RUN set -eu; \
+    git clone -q https://github.com/koide3/gtsam_points.git /tmp/gtsam_points; \
+    git -C /tmp/gtsam_points checkout -q "${GTSAM_POINTS_COMMIT}"; \
+    cmake -S /tmp/gtsam_points -B /tmp/gtsam_points/build -DCMAKE_BUILD_TYPE=Release \
+      -DBUILD_WITH_CUDA=ON -DBUILD_WITH_OPENMP=ON -DBUILD_WITH_TBB=OFF; \
+    cmake --build /tmp/gtsam_points/build -j8; \
+    cmake --install /tmp/gtsam_points/build; \
+    ldconfig; \
+    rm -rf /tmp/gtsam_points
 
 ENV LANG=en_US.UTF-8 \
     DISABLE_AUTOUPDATER=1
