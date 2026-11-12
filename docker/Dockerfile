@@ -73,6 +73,31 @@ RUN set -eu; \
 #         libeigen3-dev ros-humble-pinocchio && rm -rf /var/lib/apt/lists/*
 # ---------------------------------------------------------------------------
 
+# GLIM with GPU support, and the B2 packages. CUDA comes from NVIDIA's repo,
+# GTSAM and gtsam_points from koide3's PPA, so nothing uses the host's GTSAM.
+# rviz2 is only here so b2_interfaces' playback.launch.py resolves; with no
+# display in the container it exits, so run rviz on the host.
+RUN set -eu; \
+    curl -fsSL -o /tmp/cuda-keyring.deb \
+      https://developer.download.nvidia.com/compute/cuda/repos/ubuntu2204/x86_64/cuda-keyring_1.1-1_all.deb; \
+    dpkg -i /tmp/cuda-keyring.deb; \
+    rm /tmp/cuda-keyring.deb; \
+    curl -fsSL --compressed -o /tmp/koide3_ppa.key https://koide3.github.io/ppa/ubuntu2204/KEY.gpg; \
+    gpg --dearmor -o /etc/apt/trusted.gpg.d/koide3_ppa.gpg /tmp/koide3_ppa.key; \
+    rm /tmp/koide3_ppa.key; \
+    echo "deb [signed-by=/etc/apt/trusted.gpg.d/koide3_ppa.gpg] https://koide3.github.io/ppa/ubuntu2204 ./" \
+      > /etc/apt/sources.list.d/koide3_ppa.list; \
+    apt-get update; \
+    apt-get install -y --no-install-recommends \
+      cuda-toolkit-13-1 libgtsam-points-cuda13.1-dev \
+      libboost-all-dev libfmt-dev libmetis-dev libomp-dev libspdlog-dev \
+      ros-humble-cv-bridge ros-humble-image-transport ros-humble-rclcpp-components \
+      ros-humble-rmw-cyclonedds-cpp ros-humble-rviz2 ros-humble-xacro \
+      python3-av python3-numpy; \
+    rm -rf /var/lib/apt/lists/*
+ENV PATH=/usr/local/cuda/bin:${PATH} \
+    NVIDIA_DRIVER_CAPABILITIES=compute,utility
+
 ENV LANG=en_US.UTF-8 \
     DISABLE_AUTOUPDATER=1
 USER ${USERNAME}
