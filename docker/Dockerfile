@@ -120,6 +120,13 @@ RUN apt-get update \
       ros-humble-rqt-tf-tree \
  && rm -rf /var/lib/apt/lists/*
 
+# Fast DDS (the Humble default) drops many of the ~1.8 MB best-effort
+# /rslidar_points messages here; Cyclone DDS delivers all of them. With
+# ROS_LOCALHOST_ONLY Cyclone has no multicast and by default allows only ~10
+# participants per domain, fewer than glim.launch.py plus a bag player need.
+ENV RMW_IMPLEMENTATION=rmw_cyclonedds_cpp \
+    CYCLONEDDS_URI="<CycloneDDS><Domain><Discovery><MaxAutoParticipantIndex>100</MaxAutoParticipantIndex></Discovery></Domain></CycloneDDS>"
+
 ENV LANG=en_US.UTF-8 \
     DISABLE_AUTOUPDATER=1
 USER ${USERNAME}
