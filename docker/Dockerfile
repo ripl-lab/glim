@@ -112,10 +112,12 @@ RUN set -eu; \
     ldconfig; \
     rm -rf /tmp/gtsam_points
 
-# unitree_ros2's message packages need the DDS IDL generator. A separate layer
-# so adding it doesn't rebuild the CUDA and gtsam_points layers above.
+# unitree_ros2's message packages need the DDS IDL generator; rqt_tf_tree is for
+# checking the TF tree. A separate layer so adding packages doesn't rebuild the
+# CUDA and gtsam_points layers above.
 RUN apt-get update \
  && apt-get install -y --no-install-recommends ros-humble-rosidl-generator-dds-idl \
+      ros-humble-rqt-tf-tree \
  && rm -rf /var/lib/apt/lists/*
 
 ENV LANG=en_US.UTF-8 \
